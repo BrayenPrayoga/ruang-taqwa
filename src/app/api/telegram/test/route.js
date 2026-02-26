@@ -21,8 +21,8 @@ export async function POST(request) {
     }
 
     const message = `🌙 MyRamadhan Terhubung!
-Alhamdulillah, koneksi Telegram berhasil.
-Semua notifikasi kini siap dikirim langsung ke bot ini 🤖✨`;
+                    Alhamdulillah, koneksi Telegram berhasil.
+                    Semua notifikasi kini siap dikirim langsung ke bot ini 🤖✨`;
 
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',

@@ -30,7 +30,9 @@ export async function POST(request) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
-          text: 'Koneksi awal diterima.\nSilakan kembali ke aplikasi MyRamadhan, lalu tekan tombol "Cek Status".',
+          text: `🤝Sambungan Telah Terjalin
+                  Dengan izin Allah, koneksi awal sudah berhasil diterima.
+                  Silakan kembali ke aplikasi MyRamadhan, lalu pilih "Cek Status" untuk memastikan semuanya berjalan lancar.`,
         }),
         cache: 'no-store',
       });
