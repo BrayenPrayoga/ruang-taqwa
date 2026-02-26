@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Bell, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -23,7 +23,7 @@ const HomeHeader = ({
         <div className='relative w-9 h-9 md:w-12 md:h-12 lg:w-14 lg:h-14 shrink-0'>
           <Image
             src='/logo.png'
-            alt='RuangTaqwa Logo'
+            alt='MyRamadhan Logo'
             fill
             className='object-contain'
             sizes='(max-width: 768px) 36px, (max-width: 1024px) 48px, 56px'

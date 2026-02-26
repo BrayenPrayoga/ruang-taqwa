@@ -1,6 +1,6 @@
-{
-  "name": "RuangTaqwa",
-  "short_name": "RuangTaqwa",
+﻿{
+  "name": "MyRamadhan",
+  "short_name": "MyRamadhan",
   "description": "Asisten Ibadah Harianmu",
   "start_url": "/",
   "display": "standalone",
@@ -22,3 +22,4 @@
     }
   ]
 }
+

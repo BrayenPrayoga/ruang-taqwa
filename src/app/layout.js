@@ -1,4 +1,4 @@
-import './globals.css';
+﻿import './globals.css';
 import { Inter } from 'next/font/google';
 import SideNav from '@/components/SideNav';
 import ThemeInitializer from '@/components/ThemeInitializer';
@@ -6,7 +6,7 @@ import ThemeInitializer from '@/components/ThemeInitializer';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Ruang Taqwa',
+  title: 'MyRamadhan',
   description:
     "Aplikasi pendamping ibadah Ramadhan lengkap dengan Al-Qur'an, Tracker, Jurnal, dan Jadwal Sholat secara offline.",
   manifest: '/manifest.json',
@@ -17,7 +17,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Ruang Taqwa',
+    title: 'MyRamadhan',
   },
   formatDetection: {
     telephone: false,
