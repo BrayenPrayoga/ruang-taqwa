@@ -4,8 +4,34 @@ import dayjs from 'dayjs';
 import localforage from 'localforage';
 import { getNotificationForDay } from '@/data/notificationsData';
 
+const TELEGRAM_PRAYER_GRACE_MINUTES = 20;
+
+const isTelegramForwardable = (notif, now, currentHijriDay) => {
+  if (notif?.type !== 'prayer') {
+    const notifDay =
+      typeof notif?.day === 'number' && !Number.isNaN(notif.day)
+        ? notif.day
+        : null;
+
+    // Notifikasi statis hanya dikirim untuk hari ini (bukan hari-hari lampau).
+    if (notifDay === null) return true;
+    return notifDay === currentHijriDay;
+  }
+
+  const scheduledAt = notif?.scheduledAt;
+  if (!scheduledAt) return false;
+
+  const scheduledMoment = dayjs(scheduledAt);
+  if (!scheduledMoment.isValid()) return false;
+
+  // Lewat lebih dari grace window dianggap notifikasi terlewat -> jangan kirim.
+  return now.isBefore(
+    scheduledMoment.add(TELEGRAM_PRAYER_GRACE_MINUTES, 'minute'),
+  );
+};
+
 /**
- * useNotifications — menyusun daftar notifikasi gabungan:
+ * useNotifications - menyusun daftar notifikasi gabungan:
  *   1. Notifikasi statis berdasarkan hari Hijriah (dari notificationsData)
  *   2. Notifikasi dinamis waktu sholat (jika waktu sudah lewat)
  *
@@ -47,9 +73,10 @@ const useNotifications = (mounted, hijriDay, prayerTimes, currentTime) => {
           dynamicNotifs.push({
             id: `prayer_${p.key}_${dayjs().format('YYYYMMDD')}`,
             day: dayNum,
-            title: `Waktu ${p.label} Telah Tiba! 🕌`,
+            title: `Waktu ${p.label} Telah Tiba!`,
             message: `Udah masuk waktu ${p.label} nih! Jangan lupa sholat ya, dan catat di Tracker.`,
             type: 'prayer',
+            scheduledAt: prayerMoment.toISOString(),
           });
         }
       });
@@ -83,10 +110,19 @@ const useNotifications = (mounted, hijriDay, prayerTimes, currentTime) => {
       const sentIds =
         (await localforage.getItem('telegram_sent_notifications')) || [];
       const sentSet = new Set(sentIds);
+      const now = dayjs();
+      const currentHijriDayNum = Number.isNaN(Number(hijriDay))
+        ? 0
+        : Number(hijriDay);
 
       for (const notif of notifications) {
         const notifId = notif?.id?.toString();
         if (!notifId || sentSet.has(notifId)) continue;
+
+        if (!isTelegramForwardable(notif, now, currentHijriDayNum)) {
+          sentSet.add(notifId);
+          continue;
+        }
 
         try {
           const res = await fetch('/api/telegram/forward', {
@@ -115,7 +151,7 @@ const useNotifications = (mounted, hijriDay, prayerTimes, currentTime) => {
     };
 
     forwardToTelegram();
-  }, [mounted, notifications]);
+  }, [mounted, notifications, hijriDay]);
 
   const markAsRead = async () => {
     setHasUnreadNotif(false);
