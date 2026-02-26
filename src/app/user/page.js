@@ -22,10 +22,12 @@ import DrawerPengembang from '@/components/User/Drawer/DrawerPengembang';
 import DrawerDonasi from '@/components/User/Drawer/DrawerDonasi';
 import DrawerSyncDevice from '@/components/User/Drawer/DrawerSyncDevice';
 import DrawerGithub from '@/components/User/Drawer/DrawerGithub';
+import DrawerTelegram from '@/components/User/Drawer/DrawerTelegram';
 
 const DRAWERS = {
   EDIT_PROFIL: 'edit_profil',
   TEMA: 'tema',
+  TELEGRAM: 'telegram',
   DATA_MANAGEMENT: 'data_management',
   CONFIRM_RESET: 'confirm_reset',
   BANTUAN: 'bantuan',
@@ -50,6 +52,10 @@ export default function UserProfile() {
   const [avatar, setAvatar] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [telegramUsername, setTelegramUsername] = useState('');
+  const [telegramLinkCode, setTelegramLinkCode] = useState('');
+  const [isTelegramBusy, setIsTelegramBusy] = useState(false);
 
   const resizeImageToDataUrl = (file, maxSize = 512, quality = 0.82) =>
     new Promise((resolve, reject) => {
@@ -87,6 +93,12 @@ export default function UserProfile() {
       const savedTheme = (await localforage.getItem('theme')) || 'light';
       setTheme(savedTheme);
     };
+    const loadTelegramConfig = async () => {
+      const config = (await localforage.getItem('telegram_config')) || {};
+      setTelegramChatId(config.chatId || '');
+      setTelegramUsername(config.username || '');
+      setTelegramLinkCode(config.linkCode || '');
+    };
 
     if (user) {
       setEditName(user.name || '');
@@ -95,6 +107,7 @@ export default function UserProfile() {
     }
 
     loadTheme();
+    loadTelegramConfig();
   }, [user]);
 
   // Function untuk mengganti tema aplikasi
@@ -149,6 +162,95 @@ export default function UserProfile() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleStartTelegramConnect = async () => {
+    setIsTelegramBusy(true);
+    try {
+      const code =
+        (typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `link_${Date.now()}`) + '';
+      const res = await fetch(
+        `/api/telegram/connect/init?code=${encodeURIComponent(code)}`,
+      );
+      const data = await res.json();
+      if (!res.ok || !data?.ok || !data?.connectUrl) {
+        throw new Error(data?.error || 'Gagal memulai koneksi Telegram.');
+      }
+      setTelegramLinkCode(code);
+      window.open(data.connectUrl, '_blank');
+      return { ok: true };
+    } catch (error) {
+      console.error(error);
+      return { ok: false, error: error.message };
+    } finally {
+      setIsTelegramBusy(false);
+    }
+  };
+
+  const handleCheckTelegramConnect = async () => {
+    if (!telegramLinkCode) {
+      return {
+        ok: false,
+        error: 'Klik "Hubungkan Otomatis" dulu sebelum cek status.',
+      };
+    }
+
+    setIsTelegramBusy(true);
+    try {
+      const res = await fetch(
+        `/api/telegram/connect/status?code=${encodeURIComponent(
+          telegramLinkCode,
+        )}`,
+      );
+      const data = await res.json();
+      if (!res.ok || !data?.ok || !data?.chatId) {
+        throw new Error(data?.error || 'Belum terhubung.');
+      }
+
+      const config = {
+        chatId: String(data.chatId),
+        username: data.username || '',
+        linkCode: telegramLinkCode,
+        connected: true,
+      };
+      await localforage.setItem('telegram_config', config);
+      setTelegramChatId(config.chatId);
+      setTelegramUsername(config.username);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    } finally {
+      setIsTelegramBusy(false);
+    }
+  };
+
+  const handleTestTelegram = async () => {
+    if (!telegramChatId) {
+      return { ok: false, error: 'Telegram belum tersambung.' };
+    }
+    try {
+      const res = await fetch('/api/telegram/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: telegramChatId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || 'Gagal kirim pesan test.');
+      }
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    }
+  };
+
+  const handleDisconnectTelegram = async () => {
+    await localforage.removeItem('telegram_config');
+    setTelegramChatId('');
+    setTelegramUsername('');
+    setTelegramLinkCode('');
   };
 
   // Function untuk mengekspor data lokal menjadi file JSON
@@ -237,6 +339,8 @@ export default function UserProfile() {
           <div className='space-y-6 w-full order-1'>
             <PreferensiMenuSection
               theme={theme}
+              isTelegramConnected={Boolean(telegramChatId.trim())}
+              onOpenTelegram={() => setActiveDrawer(DRAWERS.TELEGRAM)}
               onOpenTema={() => setActiveDrawer(DRAWERS.TEMA)}
               onOpenData={() => setActiveDrawer(DRAWERS.DATA_MANAGEMENT)}
               onOpenReset={() => setActiveDrawer(DRAWERS.CONFIRM_RESET)}
@@ -300,6 +404,18 @@ export default function UserProfile() {
           toggleTheme(t);
           closeDrawer();
         }}
+      />
+      <DrawerTelegram
+        open={activeDrawer === DRAWERS.TELEGRAM}
+        onClose={closeDrawer}
+        onStartConnect={handleStartTelegramConnect}
+        onCheckConnect={handleCheckTelegramConnect}
+        onSendTest={handleTestTelegram}
+        onDisconnect={handleDisconnectTelegram}
+        isBusy={isTelegramBusy}
+        isConnected={Boolean(telegramChatId.trim())}
+        chatId={telegramChatId}
+        username={telegramUsername}
       />
       <DrawerBantuan
         open={activeDrawer === DRAWERS.BANTUAN}

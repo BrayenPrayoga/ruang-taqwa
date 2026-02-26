@@ -72,6 +72,51 @@ const useNotifications = (mounted, hijriDay, prayerTimes, currentTime) => {
     checkUnread();
   }, [notifications]);
 
+  // Auto-forward notifikasi ke Telegram jika user sudah connect
+  useEffect(() => {
+    const forwardToTelegram = async () => {
+      if (!mounted || notifications.length === 0) return;
+
+      const config = (await localforage.getItem('telegram_config')) || {};
+      if (!config?.connected || !config?.chatId) return;
+
+      const sentIds =
+        (await localforage.getItem('telegram_sent_notifications')) || [];
+      const sentSet = new Set(sentIds);
+
+      for (const notif of notifications) {
+        const notifId = notif?.id?.toString();
+        if (!notifId || sentSet.has(notifId)) continue;
+
+        try {
+          const res = await fetch('/api/telegram/forward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chatId: config.chatId,
+              title: notif.title,
+              message: notif.message,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data?.ok) continue;
+
+          sentSet.add(notifId);
+        } catch {
+          // silent fail: notifikasi aplikasi tetap berjalan walau telegram gagal
+        }
+      }
+
+      await localforage.setItem(
+        'telegram_sent_notifications',
+        Array.from(sentSet),
+      );
+    };
+
+    forwardToTelegram();
+  }, [mounted, notifications]);
+
   const markAsRead = async () => {
     setHasUnreadNotif(false);
     await localforage.setItem(
