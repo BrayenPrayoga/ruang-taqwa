@@ -13,24 +13,24 @@ const HomeHeader = ({
   const router = useRouter();
 
   return (
-    <header className='flex justify-between items-center mb-8 mt-2 md:mb-10 lg:mb-10'>
-      <div className='min-w-0 grid grid-cols-[auto_1fr] items-center gap-x-3 md:gap-x-4 gap-y-1'>
+    <header className='flex justify-between items-start md:items-center gap-3 mb-8 mt-2 md:mb-10 lg:mb-10'>
+      <div className='flex-1 min-w-0 pr-2 md:pr-0 grid grid-cols-[auto_1fr] items-center gap-x-2.5 md:gap-x-4 gap-y-1'>
         <div />
-        <span className='inline-block px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-[#1e3a8a] dark:text-blue-400 text-[10px] md:text-xs font-bold uppercase tracking-wider rounded-md'>
+        <span className='inline-block justify-self-start w-fit px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-[#1e3a8a] dark:text-blue-400 text-[10px] md:text-xs font-bold uppercase tracking-wider rounded-md'>
           {hijriDate}
         </span>
 
-        <div className='relative w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 shrink-0'>
+        <div className='relative w-9 h-9 md:w-12 md:h-12 lg:w-14 lg:h-14 shrink-0'>
           <Image
             src='/logo.png'
             alt='RuangTaqwa Logo'
             fill
             className='object-contain'
-            sizes='(max-width: 768px) 40px, (max-width: 1024px) 48px, 56px'
+            sizes='(max-width: 768px) 36px, (max-width: 1024px) 48px, 56px'
             priority
           />
         </div>
-        <h1 className='text-2xl md:text-3xl lg:text-3xl font-extrabold tracking-tight leading-tight'>
+        <h1 className='text-xl md:text-3xl lg:text-3xl font-extrabold tracking-tight leading-tight'>
           {"Assalamu'alaikum"} <br />
           <span className='text-[#1e3a8a] dark:text-blue-400'>
             {user?.name || 'Sahabat!'}
@@ -39,7 +39,7 @@ const HomeHeader = ({
         </h1>
       </div>
 
-      <div className='flex gap-4 md:gap-5 items-center shrink-0'>
+      <div className='flex gap-2.5 md:gap-5 items-center shrink-0 mt-4 md:mt-0'>
         <div
           className='relative cursor-pointer hover:scale-110 transition-transform flex items-center justify-center'
           onClick={onOpenNotification}
