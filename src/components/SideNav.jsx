@@ -17,13 +17,18 @@ import {
   Droplets,
   ScrollText,
   Scale,
+  Download,
 } from 'lucide-react';
+import useAppMode from '@/hooks/useAppMode';
+import useInstallPrompt from '@/hooks/useInstallPrompt';
 
 export default function SideNav() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const navRef = useRef(null);
+  const { isPWA } = useAppMode();
+  const { isInstallable, promptInstall, isIOS } = useInstallPrompt();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -173,69 +178,106 @@ export default function SideNav() {
           minHeight: '250px',
         }}
       >
-        <div className='w-full h-full overflow-y-auto overflow-x-visible custom-scrollbar flex flex-col items-center py-4 gap-1.5'>
-          <button
-            onClick={() => setIsOpen(false)}
-            className='w-10 h-10 mb-2 rounded-xl flex items-center justify-center shrink-0 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors'
-          >
-            <ChevronRight size={20} strokeWidth={2.5} />
-          </button>
+        <div className='w-full h-full flex flex-col py-4'>
+          <div className='flex-1 overflow-y-auto overflow-x-visible custom-scrollbar flex flex-col items-center gap-1.5'>
+            <button
+              onClick={() => setIsOpen(false)}
+              className='w-10 h-10 mb-2 rounded-xl flex items-center justify-center shrink-0 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors'
+            >
+              <ChevronRight size={20} strokeWidth={2.5} />
+            </button>
 
-          {navGroups.map((group, groupIndex) => (
-            <React.Fragment key={groupIndex}>
-              {groupIndex > 0 && (
-                <div className='w-8 h-px bg-slate-200/60 dark:bg-slate-700/60 my-1 rounded-full shrink-0' />
-              )}
+            {navGroups.map((group, groupIndex) => (
+              <React.Fragment key={groupIndex}>
+                {groupIndex > 0 && (
+                  <div className='w-8 h-px bg-slate-200/60 dark:bg-slate-700/60 my-1 rounded-full shrink-0' />
+                )}
 
-              {group.map((item, itemIndex) => {
-                const Icon = item.icon;
-                const isActive =
-                  pathname === item.path ||
-                  (item.path !== '/' && pathname?.startsWith(item.path));
+                {group.map((item, itemIndex) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    pathname === item.path ||
+                    (item.path !== '/' && pathname?.startsWith(item.path));
 
-                return (
-                  <div
-                    key={itemIndex}
-                    className='relative group/navitem w-full flex justify-center shrink-0'
-                  >
-                    <button
-                      onClick={() => {
-                        router.push(item.path);
-                        setIsOpen(false);
-                      }}
-                      className={`
-                        relative p-3 rounded-2xl flex items-center justify-center transition-all duration-300
-                        ${
-                          isActive
-                            ? `bg-slate-100 dark:bg-slate-800 shadow-inner scale-95 ${item.activeColor}`
-                            : `text-slate-400 dark:text-slate-500 ${item.bgHover} hover:scale-110 hover:-translate-x-1`
-                        }
-                      `}
-                    >
-                      <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-
-                      {isActive && (
-                        <span className='absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-current' />
-                      )}
-                    </button>
-
+                  return (
                     <div
-                      className='
-                      absolute right-14 top-1/2 -translate-y-1/2 px-3 py-1.5 
-                      bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold rounded-xl whitespace-nowrap
-                      opacity-0 translate-x-4 pointer-events-none transition-all duration-300 z-50
-                      group-hover/navitem:opacity-100 group-hover/navitem:translate-x-0
-                      shadow-lg
-                    '
+                      key={itemIndex}
+                      className='relative group/navitem w-full flex justify-center shrink-0'
                     >
-                      {item.label}
-                      <div className='absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-100 rotate-45' />
+                      <button
+                        onClick={() => {
+                          router.push(item.path);
+                          setIsOpen(false);
+                        }}
+                        className={`
+                          relative p-3 rounded-2xl flex items-center justify-center transition-all duration-300
+                          ${
+                            isActive
+                              ? `bg-slate-100 dark:bg-slate-800 shadow-inner scale-95 ${item.activeColor}`
+                              : `text-slate-400 dark:text-slate-500 ${item.bgHover} hover:scale-110 hover:-translate-x-1`
+                          }
+                        `}
+                      >
+                        <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+
+                        {isActive && (
+                          <span className='absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-current' />
+                        )}
+                      </button>
+
+                      <div
+                        className='
+                        absolute right-14 top-1/2 -translate-y-1/2 px-3 py-1.5 
+                        bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold rounded-xl whitespace-nowrap
+                        opacity-0 translate-x-4 pointer-events-none transition-all duration-300 z-50
+                        group-hover/navitem:opacity-100 group-hover/navitem:translate-x-0
+                        shadow-lg
+                      '
+                      >
+                        {item.label}
+                        <div className='absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-100 rotate-45' />
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {!isPWA && (isInstallable || isIOS) && (
+            <div className='pt-2 mt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex justify-center'>
+              <div className='relative group/navitem w-full flex justify-center shrink-0'>
+                <button
+                  onClick={() => {
+                    if (isInstallable) {
+                      promptInstall();
+                      return;
+                    }
+                    alert(
+                      'Untuk iPhone/iPad: Tekan ikon Share lalu pilih "Add to Home Screen".',
+                    );
+                  }}
+                  className='relative p-3 rounded-2xl flex items-center justify-center transition-all duration-300 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:scale-110 hover:-translate-x-1'
+                  title='Install Aplikasi'
+                >
+                  <Download size={20} strokeWidth={2.2} />
+                </button>
+
+                <div
+                  className='
+                  absolute right-14 top-1/2 -translate-y-1/2 px-3 py-1.5 
+                  bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold rounded-xl whitespace-nowrap
+                  opacity-0 translate-x-4 pointer-events-none transition-all duration-300 z-50
+                  group-hover/navitem:opacity-100 group-hover/navitem:translate-x-0
+                  shadow-lg
+                '
+                >
+                  Install Aplikasi
+                  <div className='absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-100 rotate-45' />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
